@@ -13,3 +13,4 @@ project ("UVa_Challenge")
 
 # Include sub-projects.
 add_subdirectory ("UVa_00100 The 3n+1 problem")
+add_subdirectory ("UVa_00118 Mutant Flatworld Explorers")
