@@ -1,334 +1,272 @@
 using namespace std;
-#include<algorithm>
+#include <algorithm>
 #include <array>
+#include <fstream>
 #include <iostream>
-#include <sstream>
 #include <regex>
+#include <sstream>
 #include <string>
 #include <vector>
-
-int SPACE_SIZE_X;
-int SPACE_SIZE_Y;
 
 
 struct Coordinate
 {
-	int X;
-	int Y;
-	Coordinate(int x = 0, int y = 0)
-	{
-		X = x;
-		Y = y;
-	}
+	int x, y;
 
+	Coordinate(int xval, int yval) : x(xval), y(yval) {}
+
+	//  因為要使用 std::find 所以需要定義 ==
 	bool operator==(const Coordinate& pt) const
 	{
-		return (X == pt.X && Y == pt.Y);
+		return (x == pt.x && y == pt.y);
 	}
+};
+
+enum class Direction
+{
+	North = 0,
+	East = 1,
+	South = 2,
+	West =3
 };
 
 enum class InputType
 {
-	ChessboardSize,
+	SetGridSize,
 	PlaceRobot,
 	RobotAction
 };
 
-
 class Robot
 {
-	public:
-		enum class Direction
-		{
-			North = 0,
-			East = 1,
-			South = 2,
-			West = 3
-		};
+public:
+	Robot() :
+		islost_(false),
+		gridsize_(Coordinate(0, 0)),
+		location_(Coordinate(0, 0)),
+		facing_(Direction::North)
+	{}
 
-		bool IsLost;
-		Coordinate Loc;
-		Direction Facing;
-		vector<Coordinate> LostMemory;
+	void resetRobot(const Coordinate& grid)
+	{
+		islost_ = false;
+		gridsize_ = Coordinate(grid.x, grid.y);
+		location_ = Coordinate(0, 0);
+		facing_ = Direction::North;
+		falling_memory_.clear();
+	}
 
-		Robot()
-		{
-			IsLost = false;
-			Loc = Coordinate();
-			Facing = Direction::North;
-			LostMemory.clear();
-		}
+	void placeRobot(const Coordinate& loc, Direction dir)
+	{
+		islost_ = false;
+		location_= Coordinate(loc.x, loc.y);
+		facing_ = dir;
+	}
 
-		void PlaceRobot(int locX, int locY, char facing)
+	void exeCommand(string command_line)
+	{
+		for (char command : command_line)
 		{
-			IsLost = false;
-			Loc = Coordinate(locX, locY);
-			Facing = CharToDirection(facing);
-		}
-
-		void ExecuteInstruction(string instructions)
-		{
-			for (char action : instructions)
+			if (!islost_)
 			{
-				ExecuteAction(action);
-				if (IsLost)
+				switch (command)
 				{
+				case 'L':
+					turnLeft();
+					break;
+
+				case 'R':
+					turnRight();
+					break;
+
+				case 'F':
+					tryMoveForward();
 					break;
 				}
 			}
-			cout << GetRobotStatus() << endl;
+		}
+	}
+
+	string getStatus()
+	{
+		string result;
+
+		result = to_string(location_.x) + " "
+			+ to_string(location_.y) + " "
+			+ getDirectionChar(facing_);
+
+		if (islost_)
+		{
+			result += " LOST";
+		}
+		return result;
+	}
+private:
+	bool islost_;
+	Coordinate gridsize_;
+	Coordinate location_;
+	Direction facing_;
+	vector<Coordinate> falling_memory_;
+
+	void turnLeft()
+	{
+		facing_ = (Direction)(((int)facing_ + 3) % 4);
+	}
+
+	void turnRight()
+	{
+		facing_ = (Direction)(((int)facing_ + 1) % 4);
+	}
+
+	void tryMoveForward()
+	{
+		Coordinate next_loc = Coordinate(0, 0);
+
+		switch (facing_)
+		{
+		case Direction::North:
+			next_loc = Coordinate(location_.x,
+				location_.y + 1);
+			break;
+
+		case Direction::South:
+			next_loc = Coordinate(location_.x,
+				location_.y - 1);
+			break;
+
+		case Direction::East:
+			next_loc = Coordinate(location_.x + 1,
+				location_.y);
+			break;
+
+		case Direction::West:
+			next_loc = Coordinate(location_.x - 1,
+				location_.y);
+			break;
 		}
 
-	private:
-		Direction CharToDirection(char facing)
+		if (next_loc.x < 0 || next_loc.x > gridsize_.x ||
+			next_loc.y < 0 || next_loc.y > gridsize_.y)
 		{
-			Direction direction;
-			switch (facing)
+			auto search_memory = find(falling_memory_.begin(),
+									  falling_memory_.end(),
+									  location_);
+
+			if (search_memory != falling_memory_.end())
 			{
-			case 'N':
-				direction = Direction::North;
-				break;
-			case 'E':
-				direction = Direction::East;
-				break;
-			case 'S':
-				direction = Direction::South;
-				break;
-			case 'W':
-				direction = Direction::West;
-				break;
-			default:
-				throw invalid_argument("Invalid direction");
-				break;
-			}
-			return direction;
-		}
-
-		char DirectionToChar(Direction facing)
-		{
-			char direction;
-			switch (facing)
-			{
-			case Direction::North:
-				direction = 'N';
-				break;
-			case Direction::East:
-				direction = 'E';
-				break;
-			case Direction::South:
-				direction = 'S';
-				break;
-			case Direction::West:
-				direction = 'W';
-				break;
-			default:
-				throw invalid_argument("Invalid direction");
-				break;
-			}
-			return direction;
-		}
-
-		void ExecuteAction(char action)
-		{
-			switch (action)
-			{
-			case 'L':
-				TurnLeft();
-				break;
-			case 'R':
-				TurnRight();
-				break;
-			case 'F':
-				DoMoveForwardProcess();
-				break;
-			default:
-				break;
-			}
-		}
-
-		void TurnLeft()
-		{
-			Facing = (Direction)(((int)Facing + 3) % 4);
-		}
-
-		void TurnRight()
-		{
-			Facing = (Direction)(((int)Facing + 1) % 4);
-		}
-
-		void DoMoveForwardProcess()
-		{
-			Coordinate forwardLoc = GetForwardLoc();
-			if (!HasLostExperience(forwardLoc))
-			{
-				if (CheckIsLost(forwardLoc))
-				{
-					IsLost = true;
-					LostMemory.push_back(forwardLoc);
-				}
-				else
-				{
-					Loc = forwardLoc;
-				}
+				// has falling memory, do nothing
 			}
 			else
 			{
-				// do nothing
+				islost_ = true;
+				falling_memory_.push_back(location_);
 			}
 		}
-
-		Coordinate GetForwardLoc()
+		else
 		{
-			Coordinate forwardLoc = Loc;
-			switch (Facing)
-			{
-				case Robot::Direction::North:
-					forwardLoc.Y++;
-					break;
-				case Robot::Direction::East:
-					forwardLoc.X++;
-					break;
-				case Robot::Direction::South:
-					forwardLoc.Y--;
-					break;
-				case Robot::Direction::West:
-					forwardLoc.X--;
-					break;
-				default:
-					break;
-			}
-			return forwardLoc;
+			location_ = next_loc;
 		}
+	}
 
-		bool HasLostExperience(Coordinate loc)
+	char getDirectionChar(Direction dir)
+	{
+		switch (dir)
 		{
-			bool hasLostExperience = false;
-			for (Coordinate lostLoc : LostMemory)
-			{
-				if (lostLoc == loc)
-				{
-					hasLostExperience = true;
-					break;
-				}
-			}
-			return hasLostExperience;
+		case Direction::North:	return 'N';
+		case Direction::East:	return 'E';
+		case Direction::South:	return 'S';
+		case Direction::West:	return 'W';
+		default:
+			throw invalid_argument("Invalid direction enum");
 		}
-
-		bool CheckIsLost(Coordinate forwardLoc)
-		{
-			bool isLost;
-
-			isLost = (forwardLoc.X < 0 || forwardLoc.X > SPACE_SIZE_X || forwardLoc.Y < 0 || forwardLoc.Y > SPACE_SIZE_Y);
-
-			return isLost;
-		}
-
-		string GetRobotStatus()
-		{
-			string status;
-			status = to_string(Loc.X) + " " + to_string(Loc.Y) + " " + DirectionToChar(Facing);
-			if (IsLost)
-			{
-				status += " LOST";
-			}
-			return status;
-		}
+	}
 };
 
-static InputType GetInputType(string inputLine)
+Direction getFaceDirection(char dir)
 {
-	InputType inputType;
-	regex regexChessboardSize("^[0-9]+ [0-9]+$");
-	regex regexPlaceRobot("^[0-9]+ [0-9]+ [NESW]$");
-
-	if (regex_match(inputLine, regexChessboardSize))
+	switch (dir)
 	{
-		inputType = InputType::ChessboardSize;
+	case 'N': return Direction::North;
+	case 'E': return Direction::East;
+	case 'S': return Direction::South;
+	case 'W': return Direction::West;
+	default:
+		throw invalid_argument("Invalid direction character");
 	}
-	else if (regex_match(inputLine, regexPlaceRobot))
+}
+
+InputType determineInputType(string input_line, Coordinate& pt, Direction& facing)
+{
+	string token;
+	vector<string> tokens;
+	InputType result;
+	istringstream iss(input_line);
+	
+
+	while (iss >> token)
 	{
-		inputType = InputType::PlaceRobot;
+		tokens.push_back(token);
+	}
+
+	if (tokens.size() == 2)
+	{
+		pt = Coordinate(stoi(tokens[0]), stoi(tokens[1]));
+		result = InputType::SetGridSize;
+	}
+	else if (tokens.size() == 3)
+	{
+		pt = Coordinate(stoi(tokens[0]), stoi(tokens[1]));
+		facing = getFaceDirection(tokens[2][0]);
+		result = InputType::PlaceRobot;
 	}
 	else
 	{
-		inputType = InputType::RobotAction;
+		result = InputType::RobotAction;
 	}
 
-	return inputType;
+	return result;
 }
 
-static void ParseChessboardSize(string inputLine)
+int main()
 {
-	string strVal;
-	vector<string> strValues;
+	string input_line;
+	string output_line;
+	InputType input_type;
+	Direction dir;
+	Coordinate pt = Coordinate(0, 0);
+	Robot robot = Robot();
 
+	//ofstream outfile("debug_output.txt");  // 開啟一個檔案（如果不存在就建立）
+	//if (!outfile) {
+	//	// 確保檔案開啟成功
+	//	cerr << "Failed to open file!" << endl;
+	//	return 1;
+	//}
 
-	// 將 readline 轉換為 string stream
-	stringstream strStream(inputLine);
-
-	// 以空格為分割讀取資料
-	while (getline(strStream, strVal, ' '))
+	while (getline(cin, input_line))
 	{
-		strValues.push_back(strVal);
-	}
+		// if (input_line == "Q") break;
 
-	// 讀取 strValues 裡的資料，轉換成 int
-	SPACE_SIZE_X = stoi(strValues[0]);
-	SPACE_SIZE_Y = stoi(strValues[1]);
-}
-
-static void ParsePlaceRobot(string inputLine, int &locX, int &locY, char &facing)
-{
-	string strVal;
-	vector<string> strValues;
-	vector<char> charValues;
-
-	// 將 readline 轉換為 string stream
-	stringstream strStream(inputLine);
-
-	// 以空格為分割讀取資料
-	while (getline(strStream, strVal, ' '))
-	{
-		strValues.push_back(strVal);
-	}
-
-	// 讀取 strValues 裡的資料
-	locX = stoi(strValues[0]);
-	locY = stoi(strValues[1]);
-
-	// 將 strValues 裡的 [2] 資料，轉換成 char
-	charValues.assign(strValues[2].begin(), strValues[2].end());
-	facing = charValues[0];
-}
-
-int main() 
-{	
-	int locX, locY;
-	char facing;
-	string inputLine;
-	InputType inputType;
-
-	// Default value of robot
-	Robot robot;
-
-	while (getline(cin, inputLine))
-	{
-		inputType = GetInputType(inputLine);
-		switch (inputType)
+		input_type = determineInputType(input_line, pt, dir);
+		switch (input_type)
 		{
-			case InputType::ChessboardSize:
-				ParseChessboardSize(inputLine);
-				robot = Robot();
-				break;
+		case InputType::SetGridSize:
+			robot.resetRobot(pt);
+			break;
 
-			case InputType::PlaceRobot:
-				ParsePlaceRobot(inputLine, locX, locY, facing);
-				robot.PlaceRobot(locX, locY, facing);
-				break;
+		case InputType::PlaceRobot:
+			robot.placeRobot(pt, dir);
+			break;
 
-			case InputType::RobotAction:
-				robot.ExecuteInstruction(inputLine);
-				break;
+		case InputType::RobotAction:
+			robot.exeCommand(input_line);
+			output_line = robot.getStatus();
+			cout << output_line << endl;
+
+			//outfile << output_line << endl;
+			break;
 		}
 	}
+
+	// outfile.close();
 }
