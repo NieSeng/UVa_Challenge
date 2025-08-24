@@ -1,4 +1,3 @@
-using namespace std;
 #include <algorithm>
 #include <array>
 #include <fstream>
@@ -7,7 +6,7 @@ using namespace std;
 #include <sstream>
 #include <string>
 #include <vector>
-
+using namespace std;
 
 struct Coordinate
 {
@@ -15,8 +14,8 @@ struct Coordinate
 
 	Coordinate(int xval, int yval) : x(xval), y(yval) {}
 
-	//  ¦]¬°­n¨Ï¥Î std::find ©Ò¥H»İ­n©w¸q ==
-	bool operator==(const Coordinate& pt) const
+	//  å› ç‚ºè¦ä½¿ç”¨ std::find æ‰€ä»¥éœ€è¦å®šç¾© ==
+	bool operator==(const Coordinate &pt) const
 	{
 		return (x == pt.x && y == pt.y);
 	}
@@ -27,7 +26,7 @@ enum class Direction
 	North = 0,
 	East = 1,
 	South = 2,
-	West =3
+	West = 3
 };
 
 enum class InputType
@@ -40,14 +39,14 @@ enum class InputType
 class Robot
 {
 public:
-	Robot() :
-		islost_(false),
-		gridsize_(Coordinate(0, 0)),
-		location_(Coordinate(0, 0)),
-		facing_(Direction::North)
-	{}
+	Robot() : islost_(false),
+			  gridsize_(Coordinate(0, 0)),
+			  location_(Coordinate(0, 0)),
+			  facing_(Direction::North)
+	{
+	}
 
-	void resetRobot(const Coordinate& grid)
+	void resetRobot(const Coordinate &grid)
 	{
 		islost_ = false;
 		gridsize_ = Coordinate(grid.x, grid.y);
@@ -56,10 +55,10 @@ public:
 		falling_memory_.clear();
 	}
 
-	void placeRobot(const Coordinate& loc, Direction dir)
+	void placeRobot(const Coordinate &loc, Direction dir)
 	{
 		islost_ = false;
-		location_= Coordinate(loc.x, loc.y);
+		location_ = Coordinate(loc.x, loc.y);
 		facing_ = dir;
 	}
 
@@ -91,9 +90,7 @@ public:
 	{
 		string result;
 
-		result = to_string(location_.x) + " "
-			+ to_string(location_.y) + " "
-			+ getDirectionChar(facing_);
+		result = to_string(location_.x) + " " + to_string(location_.y) + " " + getDirectionChar(facing_);
 
 		if (islost_)
 		{
@@ -101,6 +98,7 @@ public:
 		}
 		return result;
 	}
+
 private:
 	bool islost_;
 	Coordinate gridsize_;
@@ -126,22 +124,22 @@ private:
 		{
 		case Direction::North:
 			next_loc = Coordinate(location_.x,
-				location_.y + 1);
+								  location_.y + 1);
 			break;
 
 		case Direction::South:
 			next_loc = Coordinate(location_.x,
-				location_.y - 1);
+								  location_.y - 1);
 			break;
 
 		case Direction::East:
 			next_loc = Coordinate(location_.x + 1,
-				location_.y);
+								  location_.y);
 			break;
 
 		case Direction::West:
 			next_loc = Coordinate(location_.x - 1,
-				location_.y);
+								  location_.y);
 			break;
 		}
 
@@ -172,10 +170,14 @@ private:
 	{
 		switch (dir)
 		{
-		case Direction::North:	return 'N';
-		case Direction::East:	return 'E';
-		case Direction::South:	return 'S';
-		case Direction::West:	return 'W';
+		case Direction::North:
+			return 'N';
+		case Direction::East:
+			return 'E';
+		case Direction::South:
+			return 'S';
+		case Direction::West:
+			return 'W';
 		default:
 			throw invalid_argument("Invalid direction enum");
 		}
@@ -186,22 +188,25 @@ Direction getFaceDirection(char dir)
 {
 	switch (dir)
 	{
-	case 'N': return Direction::North;
-	case 'E': return Direction::East;
-	case 'S': return Direction::South;
-	case 'W': return Direction::West;
+	case 'N':
+		return Direction::North;
+	case 'E':
+		return Direction::East;
+	case 'S':
+		return Direction::South;
+	case 'W':
+		return Direction::West;
 	default:
 		throw invalid_argument("Invalid direction character");
 	}
 }
 
-InputType determineInputType(string input_line, Coordinate& pt, Direction& facing)
+InputType determineInputType(string input_line, Coordinate &pt, Direction &facing)
 {
 	string token;
 	vector<string> tokens;
 	InputType result;
 	istringstream iss(input_line);
-	
 
 	while (iss >> token)
 	{
@@ -236,12 +241,12 @@ int main()
 	Coordinate pt = Coordinate(0, 0);
 	Robot robot = Robot();
 
-	//ofstream outfile("debug_output.txt");  // ¶}±Ò¤@­ÓÀÉ®×¡]¦pªG¤£¦s¦b´N«Ø¥ß¡^
-	//if (!outfile) {
-	//	// ½T«OÀÉ®×¶}±Ò¦¨¥\
+	// ofstream outfile("debug_output.txt");  // é–‹å•Ÿä¸€å€‹æª”æ¡ˆï¼ˆå¦‚æœä¸å­˜åœ¨å°±å»ºç«‹ï¼‰
+	// if (!outfile) {
+	//	// ç¢ºä¿æª”æ¡ˆé–‹å•ŸæˆåŠŸ
 	//	cerr << "Failed to open file!" << endl;
 	//	return 1;
-	//}
+	// }
 
 	while (getline(cin, input_line))
 	{
@@ -263,7 +268,7 @@ int main()
 			output_line = robot.getStatus();
 			cout << output_line << endl;
 
-			//outfile << output_line << endl;
+			// outfile << output_line << endl;
 			break;
 		}
 	}

@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt : Top-level CMake project file, do global configuration
 # and include sub-projects here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required(VERSION 3.16...3.27)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -14,3 +14,5 @@ project ("UVa_Challenge")
 # Include sub-projects.
 add_subdirectory ("UVa_00100 The 3n+1 problem")
 add_subdirectory ("UVa_00118 Mutant Flatworld Explorers")
+add_subdirectory ("UVa_00272 TeX Quotes")
+add_subdirectory ("UVa_00299 Train Swapping")

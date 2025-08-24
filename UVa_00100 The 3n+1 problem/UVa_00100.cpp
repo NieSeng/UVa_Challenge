@@ -4,21 +4,21 @@ using namespace std;
 static int Get3nAdd1SeqLen(long long int n)
 {
     int seqLen;
-    
-	seqLen = 1;
+
+    seqLen = 1;
     while (n > 1)
     {
         // value is even
-		if (n % 2 == 0)
-	    {
-	    	n = n / 2;
-    	}
-		// value is odd
-		else
-		{
-			n = 3 * n + 1;
-		}
-		seqLen++; 
+        if (n % 2 == 0)
+        {
+            n = n / 2;
+        }
+        // value is odd
+        else
+        {
+            n = 3 * n + 1;
+        }
+        seqLen++;
     }
 
     return seqLen;
@@ -27,15 +27,14 @@ static int Get3nAdd1SeqLen(long long int n)
 int main()
 {
     int v1, v2;
-	int min_value, max_value;
+    int min_value, max_value;
     int sql_len;
     int max_seq_len;
 
-
-    // Åª¨ú console ¿é¤Jªº¤º®e (v1, v2)
+    // è®€å– console è¼¸å…¥çš„å…§å®¹ (v1, v2)
     while (cin >> v1 >> v2)
     {
-        // ­pºâ³Ìªøªº 3n+1 §Ç¦C
+        // è¨ˆç®—æœ€é•·çš„ 3n+1 åºåˆ—
         max_seq_len = 0;
 
         if (v1 > v2)
@@ -46,7 +45,7 @@ int main()
         else
         {
             min_value = v1;
-			max_value = v2;
+            max_value = v2;
         }
 
         for (int i = min_value; i <= max_value; i++)
